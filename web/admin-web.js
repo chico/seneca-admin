@@ -39,7 +39,7 @@
     home_module.service('auth', function($http,$window) {
       return {
         instance: function(win,fail){
-          $http({method:'GET', url: '/auth/instance', cache:false}).
+          $http({method:'GET', url: seneca.config.admin.api.prefix + '/auth/instance', cache:false}).
             success(function(data, status) {
               if( win ) return win(data);
             }).

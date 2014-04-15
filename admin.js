@@ -24,6 +24,9 @@ module.exports = function( options ) {
     web:true,
     checkpermissions:false,
     prefix:'/admin',
+    api: {
+      prefix:''
+    },
     user:{nick:'admin'},
     units:[
       {name:'admin-summary', title:'Status Summary',  ng:{module:'senecaAdminSummaryModule', directive:'seneca-admin-summary', roles:['admin']}},
@@ -193,6 +196,7 @@ module.exports = function( options ) {
       plugin:plugin,
       config:{
         prefix:options.prefix,
+        api: options.api,
         units:options.units,
         checkpermissions:options.checkpermissions
       },
