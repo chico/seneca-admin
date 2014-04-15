@@ -64,38 +64,55 @@
     })
 
 
-    home_module.controller('TabView', function($scope,$rootScope) {
-      var views = []
+    home_module.controller('TabView', function($scope,$rootScope,auth) {
+      auth.instance( function( instance ){
 
-      _.each( config.units, function(unit){
-        var v = {title:unit.title,name:unit.name.replace(/-/g,'_')}
-        views.push( v )
-      })
+        var user = instance.user;
+        var roles = (user.perm) ? user.perm.roles : [];
 
-      $scope.views = views
-      $scope.curtab = 'admin_summary'
+        var views = []
 
-      $scope.tabview = function( name ){
-        tabview.show( name )
-        $scope.curtab = name
+        _.each( config.units, function(unit){
+          var foundRole = (seneca.config.admin.checkpermissions) ? false : true;
+          if (seneca.config.admin.checkpermissions && unit.ng.roles) {
+            for (var i = 0; i < unit.ng.roles.length; i++) {
+                if (roles.indexOf(unit.ng.roles[i]) > -1) {
+                    foundRole = true;
+                    break;
+                }
+            }
+          }
+          if (foundRole) {
+            var v = {title:unit.title,name:unit.name.replace(/-/g,'_')}
+            views.push( v )
+          }
+        })
+
+        $scope.views = views
+        $scope.curtab = 'admin_summary'
+
+        $scope.tabview = function( name ){
+          tabview.show( name )
+          $scope.curtab = name
 
 
-        var eventname = 'seneca-admin/unit/'+name.replace(/_/g,'-')+'/view'
-        $rootScope.$emit(eventname,[])
-        if( 'data-editor' == name ) {
-          $rootScope.$emit('seneca-data-editor/show-ents')
+          var eventname = 'seneca-admin/unit/'+name.replace(/_/g,'-')+'/view'
+          $rootScope.$emit(eventname,[])
+          if( 'data-editor' == name ) {
+            $rootScope.$emit('seneca-data-editor/show-ents')
+          }
         }
-      }
+      });
     })
 
 
 
     home_module.controller('MainPanel', function($scope, $compile, $element) {
-      
-      var directives = _.map( config.units, function(unit){ 
+
+      var directives = _.map( config.units, function(unit){
         $scope['hide_view_'+unit.name.replace(/-/g,'_')] = true
 
-        return {name:unit.name.replace(/-/g,'_'),ref:unit.ng.directive,title:unit.title} 
+        return {name:unit.name.replace(/-/g,'_'),ref:unit.ng.directive,title:unit.title}
       })
 
       _.each(directives, function(dir){

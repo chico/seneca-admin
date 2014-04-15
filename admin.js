@@ -22,13 +22,14 @@ module.exports = function( options ) {
 
   var defaultoptions = {
     web:true,
+    checkpermissions:false,
     prefix:'/admin',
     user:{nick:'admin'},
     units:[
-      {name:'admin-summary', title:'Status Summary',  ng:{module:'senecaAdminSummaryModule', directive:'seneca-admin-summary'}},
-      {name:'admin-plugins', title:'Action Patterns', ng:{module:'senecaAdminPluginsModule', directive:'seneca-admin-plugins'}},
-      {name:'admin-logging', title:'Streaming Log',   ng:{module:'senecaAdminLoggingModule', directive:'seneca-admin-logging'}},
-      {name:'admin-action',  title:'Action Executor', ng:{module:'senecaAdminActionModule',  directive:'seneca-admin-action'}},
+      {name:'admin-summary', title:'Status Summary',  ng:{module:'senecaAdminSummaryModule', directive:'seneca-admin-summary', roles:['admin']}},
+      {name:'admin-plugins', title:'Action Patterns', ng:{module:'senecaAdminPluginsModule', directive:'seneca-admin-plugins', roles:['admin']}},
+      {name:'admin-logging', title:'Streaming Log',   ng:{module:'senecaAdminLoggingModule', directive:'seneca-admin-logging', roles:['admin']}},
+      {name:'admin-action',  title:'Action Executor', ng:{module:'senecaAdminActionModule',  directive:'seneca-admin-action', roles:['admin']}}
     ],
     local:false
   }
@@ -39,8 +40,8 @@ module.exports = function( options ) {
   ])
 
   if( seneca.hasplugin('data-editor') ) {
-    defaultoptions.units.push( 
-      {name:'data-editor', title:'Data Editor',ng:{module:'senecaDataEditorModule',directive:'seneca-data-editor'}} )
+    defaultoptions.units.push(
+      {name:'data-editor', title:'Data Editor',ng:{module:'senecaDataEditorModule',directive:'seneca-data-editor', roles:['admin']}} )
   }
 
   options = seneca.util.deepextend(defaultoptions,options)
@@ -53,7 +54,7 @@ module.exports = function( options ) {
   }
 
 
- 
+
   var userent    = seneca.make$( 'sys/user' )
 
   var useract    = seneca.pin( { role:'user', cmd:'*' } )
@@ -111,7 +112,7 @@ module.exports = function( options ) {
   var activelogs = {}
   var loghandlers = {}
   function loghandler(client) {
-    var code = activelogs['admin-log-'+client.id] = nid()    
+    var code = activelogs['admin-log-'+client.id] = nid()
 
     var logh = function(){
       if( code == activelogs['admin-log-'+client.id] ) {
@@ -173,7 +174,7 @@ module.exports = function( options ) {
       })
 
       socket.installHandlers(
-        options.server, 
+        options.server,
         {
           prefix:options.prefix+'/socket',
           log:function(severity,line){
@@ -192,7 +193,8 @@ module.exports = function( options ) {
       plugin:plugin,
       config:{
         prefix:options.prefix,
-        units:options.units
+        units:options.units,
+        checkpermissions:options.checkpermissions
       },
       use:{
         startware:function(req,res,next){
@@ -220,13 +222,13 @@ module.exports = function( options ) {
           if( 0 == req.url.indexOf(options.prefix+'/act') ) {
             req.seneca.act( req.body, function( err, out ){
               if( err ) return next(err);
-        
+
               var outjson = _.isUndefined(out) ? '{}' : JSON.stringify(out)
 
               res.writeHead(200,{
                 'Content-Type':   'application/json',
                 'Cache-Control':  'private, max-age=0, no-cache, no-store',
-                'Content-Length': buffer.Buffer.byteLength(outjson) 
+                'Content-Length': buffer.Buffer.byteLength(outjson)
               })
               res.end( outjson )
             })
@@ -250,7 +252,7 @@ module.exports = function( options ) {
       }
     })
   }
- 
+
 
   return plugin;
 }
