@@ -68,7 +68,7 @@
       auth.instance( function( instance ){
 
         var user = instance.user;
-        var roles = (user.perm) ? user.perm.roles : [];
+        var roles = (user && user.perm) ? user.perm.roles : [];
 
         var views = []
 
